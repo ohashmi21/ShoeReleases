@@ -40,8 +40,9 @@ for tweet in tweets:
     tweet_time = tweet.created_at.time()
     if tweet_date == desired_date and start_time <= tweet_time <= end_time:
         tweets_for_date.append(tweet)
-
-for x in tweets_for_date:
+        
+#Iterate through yesterdays tweets, checking for keywords and printin information if criteria is met.
+for x in tweets_for_date: 
     text=x.full_text
     text=text.lower()
     if "jordan" in text:
@@ -65,4 +66,4 @@ for x in tweets_for_date:
         Day=tweetlist.index("releases")+2
 
         print(f"Jordan {tweetlist[model]} {color} {tweetlist[Month]} {tweetlist[Day]}")
-tweets_for_date=[]
+tweets_for_date=[] #Resets list
