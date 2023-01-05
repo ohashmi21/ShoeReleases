@@ -1,9 +1,26 @@
 import tweepy
 import configparser
-import pandas as pd
 from datetime import datetime, time, timedelta
+import csv
+
+releases=[]
+with open('Shoes.csv', 'r') as csvfile:
+    reader=csv.DictReader(csvfile)
+    for row in reader:
+        releases.append(row)
+
+def releases_adder(model,color,month,day):
+    shoe_dict={'Model': model.strip(), 'Color': color.strip(), 'Month': month, 'Day': day}
+    releases.append(shoe_dict)
 
 
+def excel_checker(model,color,month,day):
+    shoe_dict={'Model': model, 'Color': color, 'Month': month, 'Day': day}
+    with open('Shoes.csv', 'r') as csvfile:
+        reader=csv.DictReader(csvfile)
+        for row in reader:
+            if row == shoe_dict:
+                return False
 
 # read configs
 config = configparser.ConfigParser()
@@ -25,7 +42,7 @@ user="SOLELINKS"
 limit=3200
 tweets = tweepy.Cursor(api.user_timeline,screen_name=user, count=200, tweet_mode= 'extended').items(limit)
 
-desired_date = datetime.today().date() - timedelta(days=1)
+desired_date = datetime.today().date() - timedelta(days=0)
 
 # Set the start and end times for the desired date
 start_time = time(hour=0, minute=0, second=0)
@@ -53,13 +70,14 @@ for x in tweets_for_date:
             continue
         if "releases" not in text:
             continue
+
         color="None"
         tweetlist=text.split()
         color=""
         colorwayindex=0
         for word in tweetlist:
-            if(word.startswith("‘") or word.endswith("’")):
-                if(word.startswith("‘")):
+            if(word.startswith("‘") or word.startswith("'") or word.endswith("’" ) or word.endswith("'")):
+                if(word.startswith("‘") or word.startswith("'")):
                     colorwayindex=tweetlist.index(word)
                 color+=word
                 color+=" "
@@ -68,22 +86,52 @@ for x in tweets_for_date:
         for x in range(modelindex):
             model+=tweetlist[tweetlist.index("jordan")+x]
             model+=" "
-        Month=tweetlist.index("releases")+1
-        Day=tweetlist.index("releases")+2
-        print(f"Jordan {model} {color} {tweetlist[Month]} {tweetlist[Day]}")
+        month=(tweetlist[tweetlist.index("releases")+1]).strip()
+        day=(tweetlist[tweetlist.index("releases")+2]).strip()
+        if excel_checker(model.strip(),color.strip(),month,day)==False:
+            continue
+        releases_adder(model,color,month,day)
 
         
-    if "dunk" in text:
+
+        
+    elif "dunk" in text:
+        """if "kids" in text:
+            continue
+        if "women's" in text:
+            continue
+        if "preschool" in text:
+            continue"""
         if "releases" not in text:
             continue
+        color="None"
         tweetlist=text.split()
-        model=tweetlist.index("dunk")+1
         color=""
+        colorwayindex=0
         for word in tweetlist:
-            if(word.startswith("'") or word.endswith("'")):
+            if(word.startswith("‘") or word.startswith("'") or word.endswith("’" ) or word.endswith("'")):
+                if(word.startswith("‘") or word.startswith("'")):
+                    colorwayindex=tweetlist.index(word)
                 color+=word
                 color+=" "
-        Month=tweetlist.index("releases")+1
-        Day=tweetlist.index("releases")+2
-        print(tweetlist[model], color, tweetlist[Month], tweetlist[Day])
+        modelindex=colorwayindex-tweetlist.index("dunk")
+        model=""
+        for x in range(modelindex):
+            model+=tweetlist[tweetlist.index("dunk")+x]
+            model+=" "
+        month=(tweetlist[tweetlist.index("releases")+1]).strip()
+        day=(tweetlist[tweetlist.index("releases")+2]).strip()
+        if excel_checker(model.strip(),color.strip(),month,day)==False:
+            continue
+        releases_adder(model,color,month,day)
     tweets_for_date=[]
+
+with open('Shoes.csv', 'w', newline='') as csvfile:
+    fieldnames = ['Model', 'Color', 'Month', 'Day']
+    csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    csvwriter.writeheader()
+    for row in releases:
+        csvwriter.writerow(row)
+
+
+releases.clear()
